@@ -2,8 +2,15 @@ name: Frontend CI
 
 on:
   pull_request:
+    branches: [ main, develop ]
     paths:
       - 'frontend/**'
+      - '.github/workflows/frontend-check.yml'
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/frontend-check.yml'
 
 jobs:
   build:
@@ -26,6 +33,9 @@ jobs:
 
       - name: Lint
         run: npm run lint
+
+      - name: Type Check
+        run: npm run typecheck
 
       - name: Build
         run: npm run build
