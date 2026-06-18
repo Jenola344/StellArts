@@ -191,7 +191,6 @@ async def test_smart_scheduling_slots(db_session: Session):
         ) as mock_geocode,
         patch("app.services.routing.routing_service.get_travel_info") as mock_route,
     ):
-
         # Mock geocoding coordinates
         from app.schemas.artisan import GeolocationResponse
 
@@ -267,7 +266,6 @@ def test_propose_slots_endpoint(client: TestClient):
         ) as mock_geocode,
         patch("app.services.routing.routing_service.get_travel_info") as mock_route,
     ):
-
         # Mock geocoding coordinates
         from app.schemas.artisan import GeolocationResponse
 
