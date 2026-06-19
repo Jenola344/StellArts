@@ -134,6 +134,11 @@ jobs:
           redis:7-alpine
         
         sleep 10
+
+        docker run --rm --network test-network \
+          -e DATABASE_URL=postgresql://stellarts:stellarts_test@test-db:5432/stellarts_test_db \
+          stellarts-api:test \
+          alembic upgrade head
         
         docker run -d --name test-api --network test-network \
           -e DATABASE_URL=postgresql://stellarts:stellarts_test@test-db:5432/stellarts_test_db \
