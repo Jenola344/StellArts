@@ -14,16 +14,18 @@ POLL_INTERVAL_SECONDS = 5
 
 
 def _process_in_db(event: dict) -> bool:
-    with SessionLocal() as db:
-        try:
-            processed = process_event(db, event)
-            if processed:
-                save_cursor(db, event["id"])
-                db.commit()
-            return processed
-        except Exception:
-            db.rollback()
-            raise
+    db = SessionLocal()
+    try:
+        processed = process_event(db, event)
+        if processed:
+            save_cursor(db, event["id"])
+            db.commit()
+        return processed
+    except Exception:
+        db.rollback()
+        raise
+    finally:
+        db.close()
 
 
 def _get_cursor_from_db() -> str:
