@@ -62,6 +62,6 @@ async def fetch_events(cursor: str) -> list[dict]:
         },
     }
     async with httpx.AsyncClient(timeout=10) as client:
-        resp = await client.post(settings.SOROBAN_RPC_URL, json=payload)
+        resp = await client.post(settings.STELLAR_RPC_URL, json=payload)
         resp.raise_for_status()
         return resp.json().get("result", {}).get("events", [])

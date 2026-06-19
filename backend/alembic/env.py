@@ -12,6 +12,7 @@ from app.core.config import settings
 
 # Import all models to ensure they're registered with Base
 from app.models.user import User
+from app.models.worker_state import WorkerState
 from app.models.artisan import Artisan
 from app.models.client import Client
 from app.models.booking import Booking
