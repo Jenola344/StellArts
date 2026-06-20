@@ -141,7 +141,9 @@ def release_payment(
 
     held = (
         db.query(Payment)
-        .filter(Payment.booking_id == booking_uuid, Payment.status == PaymentStatus.HELD)
+        .filter(
+            Payment.booking_id == booking_uuid, Payment.status == PaymentStatus.HELD
+        )
         .first()
     )
     if not held:
@@ -178,7 +180,10 @@ def release_payment(
 
         # The backend needs to sign it before submission.
         from stellar_sdk import TransactionEnvelope
-        tx = TransactionEnvelope.from_xdr(unsigned_xdr, network_passphrase=soroban.get_network_passphrase())
+
+        tx = TransactionEnvelope.from_xdr(
+            unsigned_xdr, network_passphrase=soroban.get_network_passphrase()
+        )
 
         signer = soroban.get_backend_signer()
         if not signer:
@@ -314,7 +319,7 @@ def prepare_payment(
             booking_id=booking_id,
             client_address=client_public,
             token=token,
-            amount=amount_int
+            amount=amount_int,
         )
     except Exception as e:
         return {"status": "error", "message": str(e)}

@@ -61,9 +61,7 @@ def test_payments_prepare_returns_soroban_xdr(monkeypatch, client, db_session):
     artisan_headers = get_auth_headers(
         client, "artpay2@test.com", "Pass123!", "artisan"
     )
-    client_headers = get_auth_headers(
-        client, "clipay2@test.com", "Pass123!", "client"
-    )
+    client_headers = get_auth_headers(client, "clipay2@test.com", "Pass123!", "client")
 
     booking_id = create_booking(client, artisan_headers, client_headers)
 
@@ -98,9 +96,7 @@ def test_payments_prepare_forwards_escrow_error(monkeypatch, client, db_session)
     artisan_headers = get_auth_headers(
         client, "artpay3@test.com", "Pass123!", "artisan"
     )
-    client_headers = get_auth_headers(
-        client, "clipay3@test.com", "Pass123!", "client"
-    )
+    client_headers = get_auth_headers(client, "clipay3@test.com", "Pass123!", "client")
 
     booking_id = create_booking(client, artisan_headers, client_headers)
 

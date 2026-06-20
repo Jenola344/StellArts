@@ -144,12 +144,14 @@ class ProposedSlotResponse(BaseModel):
 
 class ReviewCreate(BaseModel):
     """Schema for creating a new review"""
+
     rating: int = Field(..., ge=1, le=5, description="Rating from 1 to 5 stars")
     comment: str | None = Field(None, description="Optional text comment")
 
 
 class ReviewResponse(BaseModel):
     """Schema for review response"""
+
     model_config = ConfigDict(from_attributes=True)
 
     id: int
@@ -159,4 +161,3 @@ class ReviewResponse(BaseModel):
     rating: int
     comment: str | None
     created_at: datetime
-

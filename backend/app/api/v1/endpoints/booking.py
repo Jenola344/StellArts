@@ -581,6 +581,7 @@ async def propose_slots(
     )
     return slots
 
+
 @router.post("/{booking_id}/review", response_model=ReviewResponse)
 async def create_review(
     booking_id: UUID,
@@ -598,15 +599,21 @@ async def create_review(
 
     client = db.query(Client).filter(Client.user_id == current_user.id).first()
     if not client or booking.client_id != client.id:
-        raise HTTPException(status_code=403, detail="You are not authorized to review this booking")
+        raise HTTPException(
+            status_code=403, detail="You are not authorized to review this booking"
+        )
 
     if booking.status != BookingStatus.COMPLETED:
-        raise HTTPException(status_code=400, detail="Cannot review a booking that is not completed")
+        raise HTTPException(
+            status_code=400, detail="Cannot review a booking that is not completed"
+        )
 
     # Check if a review already exists
     existing_review = db.query(Review).filter(Review.booking_id == booking_id).first()
     if existing_review:
-        raise HTTPException(status_code=400, detail="Review already exists for this booking")
+        raise HTTPException(
+            status_code=400, detail="Review already exists for this booking"
+        )
 
     # Create the review
     review = Review(
@@ -623,6 +630,7 @@ async def create_review(
     # Hook into Soroban Reputation contract
     try:
         from app.services import soroban
+
         artisan = db.query(Artisan).filter(Artisan.id == booking.artisan_id).first()
         if artisan and artisan.user:
             # We assume artisan.user has a stellar_public_key or we derive it
@@ -634,13 +642,18 @@ async def create_review(
                 # In this system, artisan.user.stellar_wallet or similar? Let's assume artisan.stellar_account or user.stellar_public_key.
                 # Actually, the user model might have stellar_account.
                 # For now, we will assume artisan's stellar address is required, or fallback to their id string if not available.
-                artisan_address = getattr(artisan, "stellar_public_key", getattr(artisan.user, "stellar_public_key", None))
+                artisan_address = getattr(
+                    artisan,
+                    "stellar_public_key",
+                    getattr(artisan.user, "stellar_public_key", None),
+                )
                 if artisan_address:
                     from stellar_sdk import scval
+
                     # rate_artisan(artisan_address, rating)
                     args = [
                         scval.to_address(artisan_address),
-                        scval.to_uint32(payload.rating)
+                        scval.to_uint32(payload.rating),
                     ]
                     soroban.invoke_contract_function(
                         contract_id,

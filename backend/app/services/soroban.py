@@ -141,7 +141,9 @@ def invoke_contract_function(
 
     except Exception as e:
         logger.error(f"Error in invoke_contract_function: {str(e)}")
-        raise RuntimeError(f"Failed to invoke contract function: {str(e)}) from e") from e
+        raise RuntimeError(
+            f"Failed to invoke contract function: {str(e)}) from e"
+        ) from e
 
 
 def get_escrow_contract_id() -> str | None:
@@ -300,9 +302,7 @@ def prepare_escrow_deposit(
     return tx.to_xdr()
 
 
-def prepare_escrow_release(
-    engagement_id: int, client_address: str, token: str
-) -> str:
+def prepare_escrow_release(engagement_id: int, client_address: str, token: str) -> str:
     """Builds the release invocation and returns unsigned XDR."""
     contract_id = get_escrow_contract_id()
     if not contract_id:
