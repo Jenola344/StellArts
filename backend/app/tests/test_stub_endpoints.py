@@ -5,7 +5,6 @@ from fastapi import status
 def test_delete_artisan_persists_deletion(client, db_session):
     """Test that DELETE /artisans/{id} actually deletes from database."""
     from app.core.security import get_password_hash
-
     from app.models.artisan import Artisan
     from app.models.user import User
 
@@ -65,7 +64,6 @@ def test_delete_artisan_persists_deletion(client, db_session):
 def test_delete_artisan_returns_404_when_not_found(client, db_session):
     """Test that DELETE /artisans/{id} returns 404 when artisan doesn't exist."""
     from app.core.security import get_password_hash
-
     from app.models.user import User
 
     # Create admin user for authentication
@@ -95,7 +93,6 @@ def test_delete_artisan_returns_404_when_not_found(client, db_session):
 def test_delete_artisan_returns_403_for_non_admin(client, db_session):
     """Test that DELETE /artisans/{id} returns 403 for non-admin users."""
     from app.core.security import get_password_hash
-
     from app.models.user import User
 
     # Create a user and artisan
@@ -125,7 +122,6 @@ def test_delete_artisan_returns_403_for_non_admin(client, db_session):
 def test_availability_update_persists_to_database(client, db_session):
     """Test that PUT /artisans/availability updates is_available in database."""
     from app.core.security import get_password_hash
-
     from app.models.artisan import Artisan
     from app.models.user import User
 
@@ -174,7 +170,6 @@ def test_availability_update_persists_to_database(client, db_session):
 def test_availability_update_returns_404_when_artisan_not_found(client, db_session):
     """Test that availability update returns 404 when artisan profile doesn't exist."""
     from app.core.security import get_password_hash
-
     from app.models.user import User
 
     # Create a user without artisan profile
@@ -207,7 +202,6 @@ def test_availability_update_returns_404_when_artisan_not_found(client, db_sessi
 def test_portfolio_creation_persists_to_database(client, db_session):
     """Test that POST /artisans/portfolio/add creates real portfolio records."""
     from app.core.security import get_password_hash
-
     from app.models.artisan import Artisan
     from app.models.portfolio import Portfolio
     from app.models.user import User
@@ -265,7 +259,6 @@ def test_portfolio_creation_persists_to_database(client, db_session):
 def test_portfolio_retrieval_returns_stored_records(client, db_session):
     """Test that GET /artisans/my-portfolio returns stored portfolio records."""
     from app.core.security import get_password_hash
-
     from app.models.artisan import Artisan
     from app.models.portfolio import Portfolio
     from app.models.user import User
@@ -332,7 +325,6 @@ def test_portfolio_retrieval_returns_stored_records(client, db_session):
 def test_portfolio_retrieval_returns_empty_list_when_no_records(client, db_session):
     """Test that GET /artisans/my-portfolio returns empty list when no records exist."""
     from app.core.security import get_password_hash
-
     from app.models.artisan import Artisan
     from app.models.user import User
 

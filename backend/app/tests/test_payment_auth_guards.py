@@ -135,7 +135,6 @@ def test_artisan_cannot_refund_payment(client):
 def test_admin_can_release_payment(client, db_session):
     """Test that admin role can access /payments/release."""
     from app.core.security import get_password_hash
-
     from app.models.user import User
 
     # Create admin user directly in DB
@@ -172,7 +171,6 @@ def test_admin_can_release_payment(client, db_session):
 def test_admin_can_refund_payment(client, db_session):
     """Test that admin role can access /payments/refund."""
     from app.core.security import get_password_hash
-
     from app.models.user import User
 
     # Create admin user directly in DB
