@@ -20,7 +20,9 @@ def test_login_rate_limiting(client):
 
     # First 5 requests should work (or fail with 401 for wrong credentials)
     for _ in range(5):
-        response = client.post("api/v1/auth/login", json=login_data, headers={"X-Forwarded-For": "1.1.1.1"})
+        response = client.post(
+            "api/v1/auth/login", json=login_data, headers={"X-Forwarded-For": "1.1.1.1"}
+        )
         # Should either be 401 (wrong password) or 200 (if user exists)
         assert response.status_code in [
             status.HTTP_401_UNAUTHORIZED,
@@ -28,7 +30,9 @@ def test_login_rate_limiting(client):
         ]
 
     # 6th request should trigger rate limit (429)
-    response = client.post("api/v1/auth/login", json=login_data, headers={"X-Forwarded-For": "1.1.1.1"})
+    response = client.post(
+        "api/v1/auth/login", json=login_data, headers={"X-Forwarded-For": "1.1.1.1"}
+    )
     assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
     assert "Retry-After" in response.headers
 
@@ -47,7 +51,11 @@ def test_register_rate_limiting(client):
     for _ in range(3):
         # Use different emails to avoid duplicate errors
         register_data["email"] = f"test{_}@example.com"
-        response = client.post("api/v1/auth/register", json=register_data, headers={"X-Forwarded-For": "2.2.2.2"})
+        response = client.post(
+            "api/v1/auth/register",
+            json=register_data,
+            headers={"X-Forwarded-For": "2.2.2.2"},
+        )
         # Should either be 201 (success) or 400 (duplicate email)
         assert response.status_code in [
             status.HTTP_201_CREATED,
@@ -56,7 +64,11 @@ def test_register_rate_limiting(client):
 
     # 4th request should trigger rate limit (429)
     register_data["email"] = "test4@example.com"
-    response = client.post("api/v1/auth/register", json=register_data, headers={"X-Forwarded-For": "2.2.2.2"})
+    response = client.post(
+        "api/v1/auth/register",
+        json=register_data,
+        headers={"X-Forwarded-For": "2.2.2.2"},
+    )
     assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
     assert "Retry-After" in response.headers
 
@@ -71,10 +83,16 @@ def test_refresh_rate_limiting(client):
         "full_name": "Test User",
         "phone": "1234567890",
     }
-    client.post("api/v1/auth/register", json=register_data, headers={"X-Forwarded-For": "3.3.3.3"})
+    client.post(
+        "api/v1/auth/register",
+        json=register_data,
+        headers={"X-Forwarded-For": "3.3.3.3"},
+    )
 
     login_data = {"email": "refresh@example.com", "password": "StrongPass1!"}
-    login_resp = client.post("api/v1/auth/login", json=login_data, headers={"X-Forwarded-For": "3.3.3.3"})
+    login_resp = client.post(
+        "api/v1/auth/login", json=login_data, headers={"X-Forwarded-For": "3.3.3.3"}
+    )
     tokens = login_resp.json()
     refresh_token = tokens["refresh_token"]
 
@@ -82,7 +100,11 @@ def test_refresh_rate_limiting(client):
 
     # First 10 requests should work
     for _ in range(10):
-        response = client.post("api/v1/auth/refresh", json=refresh_data, headers={"X-Forwarded-For": "3.3.3.3"})
+        response = client.post(
+            "api/v1/auth/refresh",
+            json=refresh_data,
+            headers={"X-Forwarded-For": "3.3.3.3"},
+        )
         # Should be 200 (success) or 401 (if token is invalid)
         assert response.status_code in [
             status.HTTP_200_OK,
@@ -90,7 +112,9 @@ def test_refresh_rate_limiting(client):
         ]
 
     # 11th request should trigger rate limit (429)
-    response = client.post("api/v1/auth/refresh", json=refresh_data, headers={"X-Forwarded-For": "3.3.3.3"})
+    response = client.post(
+        "api/v1/auth/refresh", json=refresh_data, headers={"X-Forwarded-For": "3.3.3.3"}
+    )
     assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
     assert "Retry-After" in response.headers
 
@@ -101,10 +125,14 @@ def test_rate_limiting_retry_after_header(client):
 
     # Make 5 requests to hit the limit
     for _ in range(5):
-        client.post("api/v1/auth/login", json=login_data, headers={"X-Forwarded-For": "4.4.4.4"})
+        client.post(
+            "api/v1/auth/login", json=login_data, headers={"X-Forwarded-For": "4.4.4.4"}
+        )
 
     # Next request should be rate limited with Retry-After header
-    response = client.post("api/v1/auth/login", json=login_data, headers={"X-Forwarded-For": "4.4.4.4"})
+    response = client.post(
+        "api/v1/auth/login", json=login_data, headers={"X-Forwarded-For": "4.4.4.4"}
+    )
     assert response.status_code == status.HTTP_429_TOO_MANY_REQUESTS
     assert "Retry-After" in response.headers
     # Retry-After should be a positive integer
