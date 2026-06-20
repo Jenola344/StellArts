@@ -148,7 +148,7 @@ def create_booking(
         # Notification service not available, continue without dispatch
         pass
     except Exception as e:
-        # Log error but don't fail booking creation
+        # Log error but don't fail booking creations
         print(f"Failed to dispatch notifications: {e}")
 
     return new_booking
