@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 # Soroban configuration
 _soroban_server: SorobanServer | None = None
 
+
 def get_soroban_server() -> SorobanServer:
     global _soroban_server
     if _soroban_server is None:
@@ -35,8 +36,13 @@ def get_soroban_server() -> SorobanServer:
         _soroban_server = SorobanServer(rpc_url)
     return _soroban_server
 
+
 def get_network_passphrase() -> str:
-    return settings.SOROBAN_NETWORK_PASSPHRASE or settings.STELLAR_NETWORK_PASSPHRASE or Network.TESTNET_NETWORK_PASSPHRASE
+    return (
+        settings.SOROBAN_NETWORK_PASSPHRASE
+        or settings.STELLAR_NETWORK_PASSPHRASE
+        or Network.TESTNET_NETWORK_PASSPHRASE
+    )
 
 
 def invoke_contract_function(
@@ -135,14 +141,16 @@ def invoke_contract_function(
 
     except Exception as e:
         logger.error(f"Error in invoke_contract_function: {str(e)}")
-        raise RuntimeError(f"Failed to invoke contract function: {str(e)}") from e
+        raise RuntimeError(f"Failed to invoke contract function: {str(e)}) from e") from e
 
 
 def get_escrow_contract_id() -> str | None:
     return settings.ESCROW_CONTRACT_ID
 
+
 def get_reputation_contract_id() -> str | None:
     return settings.REPUTATION_CONTRACT_ID
+
 
 def get_backend_signer() -> Keypair | None:
     secret = settings.BACKEND_SECRET_KEY
@@ -163,18 +171,18 @@ def initialize_escrow_contract(
     client: str,
     artisan: str,
     amount: int,
-    deadline: int
+    deadline: int,
 ) -> dict[str, Any]:
     """Initialize the escrow contract with backend as admin."""
     contract_id = get_escrow_contract_id()
     if not contract_id:
         return {"success": False, "message": "Escrow contract ID not configured"}
-        
+
     args = [
         scval.to_address(client),
         scval.to_address(artisan),
         scval.to_int128(amount),
-        scval.to_uint64(deadline)
+        scval.to_uint64(deadline),
     ]
     invoke_contract_function(
         contract_id,
@@ -201,7 +209,7 @@ def get_reputation_stats(
     contract_id = get_reputation_contract_id()
     if not contract_id:
         return (0, 0)
-        
+
     args = [scval.to_address(artisan_address)]
 
     try:
@@ -211,21 +219,24 @@ def get_reputation_stats(
             args,
             source_keypair,
         )
-        
+
         # Parse the result
         # Assuming the contract returns a tuple of (average_rating, rating_count)
         # represented as a vec or tuple in XDR.
         if "result" in result:
             result_val = stellar_xdr.SCVal.from_xdr(result["result"])
-            if result_val.type == stellar_xdr.SCValType.SCV_VEC and result_val.vec is not None:
+            if (
+                result_val.type == stellar_xdr.SCValType.SCV_VEC
+                and result_val.vec is not None
+            ):
                 vec = result_val.vec.sc_vec
                 if len(vec) >= 2:
-                    avg_rating = getattr(vec[0], 'u32', 0)
-                    rating_count = getattr(vec[1], 'u32', 0)
+                    avg_rating = getattr(vec[0], "u32", 0)
+                    rating_count = getattr(vec[1], "u32", 0)
                     return (avg_rating, rating_count)
     except Exception as e:
         logger.error(f"Failed to get reputation stats: {e}")
-        
+
     return (0, 0)
 
 
@@ -237,7 +248,7 @@ def transition_to_in_progress(engagement_id: int) -> dict[str, Any]:
     contract_id = get_escrow_contract_id()
     if not contract_id:
         raise RuntimeError("Escrow contract ID not configured")
-        
+
     # Convert engagement_id to Soroban Uint64
     args = [scval.to_uint64(engagement_id)]
 
@@ -252,19 +263,22 @@ def transition_to_in_progress(engagement_id: int) -> dict[str, Any]:
         signer,
     )
 
-def prepare_escrow_deposit(booking_id: str, client_address: str, token: str, amount: int) -> str:
+
+def prepare_escrow_deposit(
+    booking_id: str, client_address: str, token: str, amount: int
+) -> str:
     """Builds the Soroban invocation and returns unsigned transaction XDR for wallet signing."""
     contract_id = get_escrow_contract_id()
     if not contract_id:
         raise RuntimeError("Escrow contract ID not configured")
-        
+
     server = get_soroban_server()
     source_account = server.load_account(client_address)
 
     args = [
         scval.to_address(client_address),
         scval.to_address(token),
-        scval.to_int128(amount)
+        scval.to_int128(amount),
     ]
 
     tx = (
@@ -281,21 +295,24 @@ def prepare_escrow_deposit(booking_id: str, client_address: str, token: str, amo
         .build()
     )
 
-    # Note: For wallet signing, we may not need to prepare_transaction because the wallet handles fee bumping and auth.
-    # We just return the XDR.
+    # For wallet signing, we return the unsigned XDR directly.
+    # The wallet handles fee bumping and auth entry signing.
     return tx.to_xdr()
 
-def prepare_escrow_release(engagement_id: int, client_address: str, token: str) -> str:
+
+def prepare_escrow_release(
+    engagement_id: int, client_address: str, token: str
+) -> str:
     """Builds the release invocation and returns unsigned XDR."""
     contract_id = get_escrow_contract_id()
     if not contract_id:
         raise RuntimeError("Escrow contract ID not configured")
-        
+
     server = get_soroban_server()
     source_account = server.load_account(client_address)
 
     args = [
-        scval.to_uint64(engagement_id)
+        scval.to_uint64(engagement_id),
     ]
 
     tx = (
@@ -314,13 +331,18 @@ def prepare_escrow_release(engagement_id: int, client_address: str, token: str) 
 
     return tx.to_xdr()
 
-def submit_soroban_transaction(signed_xdr: str, timeout_seconds: int = 60) -> dict[str, Any]:
+
+def submit_soroban_transaction(
+    signed_xdr: str, timeout_seconds: int = 60
+) -> dict[str, Any]:
     """Submits the signed transaction, polls the Soroban RPC, waits for completion, and returns the result."""
-    server = get_soroban_server()
     from stellar_sdk import TransactionEnvelope
-    
-    tx = TransactionEnvelope.from_xdr(signed_xdr, network_passphrase=get_network_passphrase())
-    
+
+    server = get_soroban_server()
+    tx = TransactionEnvelope.from_xdr(
+        signed_xdr, network_passphrase=get_network_passphrase()
+    )
+
     logger.info("Submitting signed Soroban transaction...")
     send_response = server.send_transaction(tx)
 
@@ -332,7 +354,6 @@ def submit_soroban_transaction(signed_xdr: str, timeout_seconds: int = 60) -> di
     tx_hash = send_response.hash
     logger.info(f"Transaction submitted with hash: {tx_hash}")
 
-    import time
     start_time = time.time()
     while time.time() - start_time < timeout_seconds:
         status_response = server.get_transaction_status(tx_hash)
@@ -351,4 +372,6 @@ def submit_soroban_transaction(signed_xdr: str, timeout_seconds: int = 60) -> di
 
         time.sleep(2)
 
-    raise TimeoutError(f"Transaction {tx_hash} not confirmed within {timeout_seconds} seconds")
+    raise TimeoutError(
+        f"Transaction {tx_hash} not confirmed within {timeout_seconds} seconds"
+    )

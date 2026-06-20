@@ -177,11 +177,11 @@ def release_payment(
         # The backend needs to sign it before submission.
         from stellar_sdk import TransactionEnvelope
         tx = TransactionEnvelope.from_xdr(unsigned_xdr, network_passphrase=soroban.get_network_passphrase())
-        
+
         signer = soroban.get_backend_signer()
         if not signer:
             return {"status": "error", "message": "Backend signer not configured"}
-            
+
         tx.sign(signer)
         signed_xdr = tx.to_xdr()
 
@@ -303,10 +303,10 @@ def prepare_payment(
 ) -> dict[str, Any]:
     """Build an **unsigned** Stellar transaction envelope for a hold."""
     from app.services import soroban
-    
+
     token = asset_issuer if asset_issuer else asset_code
     amount_int = int(amount * Decimal("10000000"))
-    
+
     try:
         unsigned_xdr = soroban.prepare_escrow_deposit(
             booking_id=booking_id,
