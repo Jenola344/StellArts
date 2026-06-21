@@ -78,6 +78,7 @@ pub enum DataKey {
     Oracle,
     Admin,
     IsPaused,
+    Lock,
 }
 
 #[contracttype]
@@ -147,6 +148,18 @@ pub struct EscrowContract;
 
 #[contractimpl]
 impl EscrowContract {
+    fn check_and_set_lock(env: &Env) {
+        let is_locked: bool = env.storage().instance().get(&DataKey::Lock).unwrap_or(false);
+        if is_locked {
+            panic!("Reentrancy detected");
+        }
+        env.storage().instance().set(&DataKey::Lock, &true);
+    }
+
+    fn clear_lock(env: &Env) {
+        env.storage().instance().set(&DataKey::Lock, &false);
+    }
+
     pub fn init_admin(env: Env, admin: Address) {
         if env.storage().instance().has(&DataKey::Admin) {
             panic!("Admin already set");
@@ -404,13 +417,7 @@ impl EscrowContract {
             env.storage().persistent().remove(&approvals_key);
         }
 
-        // Logic: Transfer the stored escrow amount from the contract address to the artisan's address
-        let token_client = token::Client::new(&env, &token);
-        token_client.transfer(
-            &env.current_contract_address(),
-            &escrow.artisan,
-            &escrow.amount,
-        );
+        Self::check_and_set_lock(&env);
 
         // State: Update the escrow status to Released
         escrow.status = Status::Released;
@@ -424,12 +431,22 @@ impl EscrowContract {
             (Symbol::new(&env, "release"), engagement_id),
             FundsReleasedEvent {
                 id: engagement_id,
-                client: escrow.client,
-                artisan: escrow.artisan,
+                client: escrow.client.clone(),
+                artisan: escrow.artisan.clone(),
                 amount: escrow.amount,
-                token: escrow.token,
+                token: escrow.token.clone(),
             },
         );
+
+        // Logic: Transfer the stored escrow amount from the contract address to the artisan's address
+        let token_client = token::Client::new(&env, &token);
+        token_client.transfer(
+            &env.current_contract_address(),
+            &escrow.artisan,
+            &escrow.amount,
+        );
+
+        Self::clear_lock(&env);
     }
 
     /// Record a signer's approval for a multi-sig escrow release.
@@ -548,13 +565,7 @@ impl EscrowContract {
             panic!("Token does not match the initialized token for this engagement");
         }
 
-        // Transfer funds back to the client
-        let token_client = token::Client::new(&env, &token);
-        token_client.transfer(
-            &env.current_contract_address(),
-            &escrow.client,
-            &escrow.amount,
-        );
+        Self::check_and_set_lock(&env);
 
         // Update state to Refunded
         escrow.status = Status::Refunded;
@@ -563,6 +574,7 @@ impl EscrowContract {
             .persistent()
             .extend_ttl(&key, TTL_THRESHOLD, ESCROW_TTL);
 
+        let current_time = env.ledger().timestamp();
         // Emit event
         env.events().publish(
             (Symbol::new(&env, "reclaim"), engagement_id),
@@ -575,6 +587,16 @@ impl EscrowContract {
                 timestamp: current_time,
             },
         );
+
+        // Transfer funds back to the client
+        let token_client = token::Client::new(&env, &token);
+        token_client.transfer(
+            &env.current_contract_address(),
+            &escrow.client,
+            &escrow.amount,
+        );
+
+        Self::clear_lock(&env);
 
         true
     }
@@ -811,22 +833,7 @@ impl EscrowContract {
             panic!("Token does not match the initialized token for this engagement");
         }
 
-        // Logic: Transfer funds based on distribution
-        let token_client = token::Client::new(&env, &token);
-        if client_amount > 0 {
-            token_client.transfer(
-                &env.current_contract_address(),
-                &escrow.client,
-                &client_amount,
-            );
-        }
-        if artisan_amount > 0 {
-            token_client.transfer(
-                &env.current_contract_address(),
-                &escrow.artisan,
-                &artisan_amount,
-            );
-        }
+        Self::check_and_set_lock(&env);
 
         // Status update based on distribution
         if artisan_amount == 0 {
@@ -860,6 +867,25 @@ impl EscrowContract {
                 timestamp: current_time,
             },
         );
+
+        // Logic: Transfer funds based on distribution
+        let token_client = token::Client::new(&env, &token);
+        if client_amount > 0 {
+            token_client.transfer(
+                &env.current_contract_address(),
+                &escrow.client,
+                &client_amount,
+            );
+        }
+        if artisan_amount > 0 {
+            token_client.transfer(
+                &env.current_contract_address(),
+                &escrow.artisan,
+                &artisan_amount,
+            );
+        }
+
+        Self::clear_lock(&env);
     }
 
     /// Remove storage entries for a list of finalized escrow IDs.
