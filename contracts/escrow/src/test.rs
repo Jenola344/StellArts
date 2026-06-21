@@ -1911,6 +1911,10 @@ mod reentrancy_tests {
 
         // This release will trigger the token transfer, which will try to reenter release
         client.release(&id, &token_id);
+    }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Issue #297 – Material/Labor Split tests
 // ─────────────────────────────────────────────────────────────────────────────
 #[cfg(test)]
