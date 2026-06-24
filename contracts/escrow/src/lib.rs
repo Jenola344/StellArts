@@ -161,7 +161,11 @@ pub struct EscrowContract;
 #[contractimpl]
 impl EscrowContract {
     fn check_and_set_lock(env: &Env) {
-        let is_locked: bool = env.storage().instance().get(&DataKey::Lock).unwrap_or(false);
+        let is_locked: bool = env
+            .storage()
+            .instance()
+            .get(&DataKey::Lock)
+            .unwrap_or(false);
         if is_locked {
             panic!("Reentrancy detected");
         }

@@ -1846,7 +1846,7 @@ mod reentrancy_tests {
                     .unwrap();
 
                 let client = EscrowContractClient::new(&env, &escrow_addr);
-                
+
                 // Reenter the release function
                 client.release(&engagement_id, &env.current_contract_address());
             }
