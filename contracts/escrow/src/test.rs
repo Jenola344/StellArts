@@ -1891,6 +1891,7 @@ mod reentrancy_tests {
             &arbitrator,
             &token_id,
             &amount,
+            &0i128,
             &deadline,
             &vec![&env],
             &0u32,

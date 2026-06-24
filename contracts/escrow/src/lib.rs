@@ -532,21 +532,9 @@ impl EscrowContract {
                 id: engagement_id,
                 client: escrow.client.clone(),
                 artisan: escrow.artisan.clone(),
-                amount: escrow.amount,
-                token: escrow.token.clone(),
-                client: escrow.client,
-                artisan: escrow.artisan,
                 amount: transfer_amount,
-                token: escrow.token,
+                token: escrow.token.clone(),
             },
-        );
-
-        // Logic: Transfer the stored escrow amount from the contract address to the artisan's address
-        let token_client = token::Client::new(&env, &token);
-        token_client.transfer(
-            &env.current_contract_address(),
-            &escrow.artisan,
-            &escrow.amount,
         );
 
         Self::clear_lock(&env);
@@ -705,14 +693,6 @@ impl EscrowContract {
                 token: escrow.token.clone(),
                 timestamp: current_time,
             },
-        );
-
-        // Transfer funds back to the client
-        let token_client = token::Client::new(&env, &token);
-        token_client.transfer(
-            &env.current_contract_address(),
-            &escrow.client,
-            &escrow.amount,
         );
 
         Self::clear_lock(&env);
