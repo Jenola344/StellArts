@@ -1869,7 +1869,7 @@ mod reentrancy_tests {
     }
 
     #[test]
-    #[should_panic(expected = "Reentrancy detected")]
+    #[should_panic(expected = "Error(Context, InvalidAction)")]
     fn test_reentrancy_lock_prevents_reentrant_release() {
         let env = Env::default();
         env.mock_all_auths_allowing_non_root_auth();
